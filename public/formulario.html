@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Formulario</title>
+</head>
+<body>
+  <h1>Formulario de Datos</h1>
+  <form action="/guardar_datos" method="POST">
+    <label for="NombreCompleto">Nombre Completo:</label>
+    <input type="text" id="NombreCompleto" name="NombreCompleto" required><br>
+
+    <label for="telefono">Teléfono:</label>
+    <input type="text" id="telefono" name="telefono" required><br>
+
+    <label for="fecha">Fecha:</label>
+    <input type="datetime-local" id="FechaAsignacion" name="FechaAsignacion" required><br>
+
+    <label for="descripcion">Descripción:</label>
+    <textarea id="Descripcion" name="Descripcion" required type="text"></textarea><br>
+
+    <input type="submit" value="Guardar">
+  </form>
+</body>
+</html>
