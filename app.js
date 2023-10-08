@@ -49,7 +49,7 @@ app.post("/guardar_datos", (req, res) => {
   console.log(req.body.Telefono);
   // Inserta los datos en la base de datos
   const sql =
-    "INSERT INTO Planificador (NombreCompleto, Telefono, FechaAsignacion, Descripcion, Tipo, FechaConclusion, Documentos, IDColaborador, Direccion_Calle) VALUES (?, ?, ?, ?, ?,?,?,?,?)";
+    "INSERT INTO Planificador (NombreCompleto, Telefono, FechaAsignacion, Descripcion, Tipo, FechaConclusion, Documentos, IDColaborador, Direccion_Calle) VALUES (?, ?, STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s.%fZ'), ?, ?,STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s.%fZ'),?,?,?)";
   const values = [
     NombreCompleto,
     Telefono,
@@ -89,7 +89,7 @@ app.get("/SeguimientoLlamada", (req, res) => {
   });
 });
 
-
+/* 
 app.put("/agregaIncidencia", (req, res) => {
   const telefono = req.body.telefono;
   const nuevaIncidencia = req.body.nuevaIncidencia; // Cambia el nombre del campo
@@ -126,7 +126,7 @@ app.put('/agregarIncidencia2', (req, res) => {
   });
 });
 
-
+*/
 
 //TerceraVersion
 app.put('/agregarIncidencia3', (req, res) => {
