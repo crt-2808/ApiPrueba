@@ -6,6 +6,7 @@ const cors = require("cors");
 const fs = require("fs");
 const csv = require("csv-parser");
 const Papa = require('papaparse');
+const moment=require("moment-timezone");
 
 app.get("/", (req, res) => {
   //res.send(" Hello world!")
@@ -76,7 +77,7 @@ app.post("/guardar_datos", (req, res) => {
 
 app.get("/SeguimientoLlamada", (req, res) => {
   const sql =
-    'Select NombreCompleto, Telefono from Planificador Where Tipo="Llamada" and Telefono is not null';
+    'Select NombreCompleto, Telefono from Planificador Where Tipo="Llamada" and Telefono is not null and Incidentes is null';
 
   db.query(sql, (err, result) => {
     if (err) {
@@ -88,12 +89,10 @@ app.get("/SeguimientoLlamada", (req, res) => {
   });
 });
 
-// En tu archivo de servidor Node.js con Express
 
 app.put("/agregaIncidencia", (req, res) => {
   const telefono = req.body.telefono;
   const nuevaIncidencia = req.body.nuevaIncidencia; // Cambia el nombre del campo
-  console.log(req.body.telefono, req.body.nuevaIncidencia)
   // Realiza la actualización en la base de datos
   const sql = "UPDATE Planificador SET Incidentes = ? WHERE Telefono = ?"; // Cambia el nombre de la columna a actualizar
   db.query(sql, [nuevaIncidencia, telefono], (err, result) => {
@@ -129,11 +128,32 @@ app.put('/agregarIncidencia2', (req, res) => {
 
 
 
+//TerceraVersion
+app.put('/agregarIncidencia3', (req, res) => {
+  const telefono = req.body.telefono.Telefono;
+  const nuevaIncidencia = req.body.nuevaIncidencia;
+
+  // Obtén la fecha y hora actual en GMT-6 (Central Standard Time, CST)
+  const fechaActual = moment().tz('America/Mexico_City').format('YYYY-MM-DD HH:mm:ss');
+
+  // Realiza la actualización en la base de datos
+  const sql = 'UPDATE Planificador SET Incidentes = ?, FechaSeguimiento = ? WHERE Telefono = ?';
+  db.query(sql, [nuevaIncidencia, fechaActual, telefono], (err, result) => {
+    if (err) {
+      console.error('Error al actualizar: ' + err.message);
+      return res.status(500).send('Error interno del servidor');
+    } else {
+      console.log('Actualización exitosa');
+      res.status(200).send('Actualización exitosa');
+    }
+  });
+});
+
 
 
 app.get('/exportarLlamada', (req, res) => {
   // Realiza una consulta a la base de datos para obtener los datos de la tabla Planificador
-  const sql = 'SELECT * FROM Planificador WHERE Tipo = ?'; // Ajusta 'Tipo' y 'Llamada' según tu esquema de base de datos
+  const sql = 'SELECT * FROM Planificador WHERE Tipo = ? and Incidentes is not null'; // Ajusta 'Tipo' y 'Llamada' según tu esquema de base de datos
   db.query(sql, ['Llamada'], (err, data) => {
     if (err) {
       console.error('Error al obtener datos: ' + err.message);
@@ -146,7 +166,7 @@ app.get('/exportarLlamada', (req, res) => {
         Telefono: row.Telefono,
         Incidentes: row.Incidentes,
         FechaAsignacion: row.FechaAsignacion,
-        FechaConclusion: row.FechaConclusion,
+        FechaSeguimiento: row.FechaSeguimiento,
         Descripcion: row.Descripcion,
         Documentos: row.Documentos,
       }));
