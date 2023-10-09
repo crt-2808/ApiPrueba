@@ -185,7 +185,7 @@ app.get('/exportarLlamada', (req, res) => {
   });
 });
 
-
+/*
 app.post("/guardar_datos_visita", (req, res) => {  
   const { NombreCompleto, Telefono, FechaAsignacion, Direccion_Calle, Direccion_Num_Ext, Direccion_Num_Int, Direccion_CP, Direccion_Colonia, Sitioweb,  Descripcion, Tipo="Visita_Programada", FechaConclusion=FechaAsignacion , Documentos='src', IDColaborador=1,   } = req.body;
   // Inserta los datos en la base de datos
@@ -205,6 +205,70 @@ app.post("/guardar_datos_visita", (req, res) => {
     }
   });
 });
+*/
+
+app.post("/guardar_datos_visita", (req, res) => {
+  const {
+    NombreCompleto,
+    Telefono,
+    FechaAsignacion,
+    Direccion_Calle,
+    Direccion_Num_Ext,
+    Direccion_Num_Int,
+    Direccion_CP,
+    Direccion_Colonia,
+    Sitioweb,
+    Descripcion,
+    Tipo = "Visita_Programada",
+    FechaConclusion = FechaAsignacion,
+    Documentos = 'src',
+  } = req.body;
+
+  // Obtener la lista de colaboradores activos
+  const obtenerColaboradoresActivos = "SELECT id AS IDColaborador FROM Colaborador WHERE Activo = 1";
+
+  db.query(obtenerColaboradoresActivos, (err, colaboradores) => {
+    if (err) {
+      console.error("Error al obtener colaboradores activos: " + err.message);
+      res.status(500).send("Error al obtener la lista de colaboradores activos");
+      return;
+    }
+
+    // Iterar sobre la lista de colaboradores y realizar la inserción de datos
+    colaboradores.forEach((colaborador) => {
+      const sql =
+        "INSERT INTO Planificador (NombreCompleto, Telefono, FechaAsignacion, Direccion_Calle, Direccion_Num_Ext, Direccion_Num_Int, Direccion_CP, Direccion_Colonia, Sitioweb, Descripcion, Tipo, FechaConclusion, Documentos, IDColaborador) VALUES (?, ?, STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s.%fZ'), ?,?,?,?,?,?,?,?,STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s.%fZ'),?,?)";
+
+      const values = [
+        NombreCompleto,
+        Telefono,
+        FechaAsignacion,
+        Direccion_Calle,
+        Direccion_Num_Ext,
+        Direccion_Num_Int,
+        Direccion_CP,
+        Direccion_Colonia,
+        Sitioweb,
+        Descripcion,
+        Tipo,
+        FechaConclusion,
+        Documentos,
+        colaborador.IDColaborador, // Usar el IDColaborador del colaborador activo actual
+      ];
+
+      db.query(sql, values, (err, result) => {
+        if (err) {
+          console.error("Error al insertar datos en la base de datos: " + err.message);
+        } else {
+          console.log("Datos guardados correctamente para el colaborador con ID " + colaborador.IDColaborador);
+        }
+      });
+    });
+
+    res.status(200).send("Datos guardados correctamente para todos los colaboradores activos");
+  });
+});
+
 
 
 app.listen(3005, () => {
