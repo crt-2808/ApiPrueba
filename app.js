@@ -46,7 +46,6 @@ app.post("/guardar_datos", (req, res) => {
     IDColaborador = 1,
     Direccion_Calle = "CallePrueba",
   } = req.body;
-  console.log(req.body.Telefono);
   // Inserta los datos en la base de datos
   const sql =
     "INSERT INTO Planificador (NombreCompleto, Telefono, FechaAsignacion, Descripcion, Tipo, FechaConclusion, Documentos, IDColaborador, Direccion_Calle) VALUES (?, ?, STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s.%fZ'), ?, ?,STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s.%fZ'),?,?,?)";
@@ -132,13 +131,14 @@ app.put('/agregarIncidencia2', (req, res) => {
 app.put('/agregarIncidencia3', (req, res) => {
   const telefono = req.body.telefono.Telefono;
   const nuevaIncidencia = req.body.nuevaIncidencia;
+  const nombre=req.body.telefono.NombreCompleto;
 
   // Obtén la fecha y hora actual en GMT-6 (Central Standard Time, CST)
   const fechaActual = moment().tz('America/Mexico_City').format('YYYY-MM-DD HH:mm:ss');
 
   // Realiza la actualización en la base de datos
-  const sql = 'UPDATE Planificador SET Incidentes = ?, FechaSeguimiento = ? WHERE Telefono = ?';
-  db.query(sql, [nuevaIncidencia, fechaActual, telefono], (err, result) => {
+  const sql = 'UPDATE Planificador SET Incidentes = ?, FechaSeguimiento = ? WHERE Telefono = ? and NombreCompleto = ?';
+  db.query(sql, [nuevaIncidencia, fechaActual, telefono, nombre], (err, result) => {
     if (err) {
       console.error('Error al actualizar: ' + err.message);
       return res.status(500).send('Error interno del servidor');
@@ -186,6 +186,25 @@ app.get('/exportarLlamada', (req, res) => {
 });
 
 
+app.post("/guardar_datos_visita", (req, res) => {  
+  const { NombreCompleto, Telefono, FechaAsignacion, Direccion_Calle, Direccion_Num_Ext, Direccion_Num_Int, Direccion_CP, Direccion_Colonia, Sitioweb,  Descripcion, Tipo="Visita_Programada", FechaConclusion=FechaAsignacion , Documentos='src', IDColaborador=1,   } = req.body;
+  // Inserta los datos en la base de datos
+  const sql =
+    "INSERT INTO Planificador (NombreCompleto, Telefono, FechaAsignacion, Direccion_Calle, Direccion_Num_Ext, Direccion_Num_Int, Direccion_CP, Direccion_Colonia, Sitioweb, Descripcion, Tipo, FechaConclusion, Documentos, IDColaborador) VALUES (?, ?, STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s.%fZ'), ?,?,?,?,?,?,?,?,STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s.%fZ'),?,?)";
+  const values = [NombreCompleto, Telefono, FechaAsignacion, Direccion_Calle, Direccion_Num_Ext, Direccion_Num_Int, Direccion_CP, Direccion_Colonia, Sitioweb, Descripcion, Tipo, FechaConclusion, Documentos, IDColaborador];
+
+  db.query(sql, values, (err, result) => {
+    if (err) {
+      console.error(
+        "Error al insertar datos en la base de datos: " + err.message
+      );
+      res.status(500).send("Error al guardar los datos en la base de datos");
+    } else {
+      console.log("Datos guardados correctamente");
+      res.status(200).send("Datos guardados correctamente");
+    }
+  });
+});
 
 
 app.listen(3005, () => {
