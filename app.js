@@ -34,6 +34,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 app.use(express.static("public"));
 
+
+//AgregarLlamada
 app.post("/guardar_datos", (req, res) => {
   const {
     NombreCompleto,
@@ -46,7 +48,6 @@ app.post("/guardar_datos", (req, res) => {
     IDColaborador = 1,
     Direccion_Calle = "CallePrueba",
   } = req.body;
-  // Inserta los datos en la base de datos
   const sql =
     "INSERT INTO Planificador (NombreCompleto, Telefono, FechaAsignacion, Descripcion, Tipo, FechaConclusion, Documentos, IDColaborador, Direccion_Calle) VALUES (?, ?, STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s.%fZ'), ?, ?,STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s.%fZ'),?,?,?)";
   const values = [
@@ -74,6 +75,7 @@ app.post("/guardar_datos", (req, res) => {
   });
 });
 
+//SeguimientoLLamada, dropdown
 app.get("/SeguimientoLlamada", (req, res) => {
   const sql =
     'Select NombreCompleto, Telefono from Planificador Where Tipo="Llamada" and Telefono is not null and Incidentes is null';
@@ -127,16 +129,12 @@ app.put('/agregarIncidencia2', (req, res) => {
 
 */
 
-//TerceraVersion
-app.put('/agregarIncidencia3', (req, res) => {
+//Agregar Incidencia llamada
+app.put('/agregarIncidencia', (req, res) => {
   const telefono = req.body.telefono.Telefono;
   const nuevaIncidencia = req.body.nuevaIncidencia;
   const nombre=req.body.telefono.NombreCompleto;
-
-  // Obtén la fecha y hora actual en GMT-6 (Central Standard Time, CST)
   const fechaActual = moment().tz('America/Mexico_City').format('YYYY-MM-DD HH:mm:ss');
-
-  // Realiza la actualización en la base de datos
   const sql = 'UPDATE Planificador SET Incidentes = ?, FechaSeguimiento = ? WHERE Telefono = ? and NombreCompleto = ?';
   db.query(sql, [nuevaIncidencia, fechaActual, telefono, nombre], (err, result) => {
     if (err) {
@@ -150,10 +148,9 @@ app.put('/agregarIncidencia3', (req, res) => {
 });
 
 
-
+//Crear el CSV con las llamadas ya atendidas
 app.get('/exportarLlamada', (req, res) => {
-  // Realiza una consulta a la base de datos para obtener los datos de la tabla Planificador
-  const sql = 'SELECT * FROM Planificador WHERE Tipo = ? and Incidentes is not null'; // Ajusta 'Tipo' y 'Llamada' según tu esquema de base de datos
+  const sql = 'SELECT * FROM Planificador WHERE Tipo = ? and Incidentes is not null';
   db.query(sql, ['Llamada'], (err, data) => {
     if (err) {
       console.error('Error al obtener datos: ' + err.message);
@@ -207,6 +204,7 @@ app.post("/guardar_datos_visita", (req, res) => {
 });
 */
 
+//Guardar datos visitaProgramada para todos los colab
 app.post("/guardar_datos_visita", (req, res) => {
   const {
     NombreCompleto,
@@ -223,17 +221,14 @@ app.post("/guardar_datos_visita", (req, res) => {
     FechaConclusion = FechaAsignacion,
     Documentos = 'src',
   } = req.body;
-
   // Obtener la lista de colaboradores activos
   const obtenerColaboradoresActivos = "SELECT id AS IDColaborador FROM Colaborador WHERE Activo = 1";
-
   db.query(obtenerColaboradoresActivos, (err, colaboradores) => {
     if (err) {
       console.error("Error al obtener colaboradores activos: " + err.message);
       res.status(500).send("Error al obtener la lista de colaboradores activos");
       return;
     }
-
     // Iterar sobre la lista de colaboradores y realizar la inserción de datos
     colaboradores.forEach((colaborador) => {
       const sql =
