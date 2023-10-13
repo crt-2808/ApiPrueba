@@ -225,7 +225,7 @@ app.post("/guardar_datos_visita", (req, res) => {
   });
 });
   
-//app.post("/guardar_datos_cambaceoDiario", (req, res) => {  
+//app.post("/guardar_datos_cambaceo", (req, res) => {  
 //const {
   //  NombreCompleto,
   //  Telefono,
@@ -301,3 +301,183 @@ app.get("/SeguimientoVisita", (req, res) => {
 app.listen(3005, () => {
   console.log("server is running on port ", 3005);
 });
+
+
+
+
+app.get('/exportarLlamada', (req, res) => {
+  const sql = 'SELECT * FROM Planificador WHERE Tipo = ? and Incidentes is not null';
+  db.query(sql, ['Llamada'], (err, data) => {
+    if (err) {
+      console.error('Error al obtener datos: ' + err.message);
+      res.status(500).send('Error interno del servidor');
+    } else {
+      // Crear un objeto CSV con encabezados y datos alineados
+      const csv = data.map((row) => ({
+        ID: row.ID,
+        NombreCompleto: row.NombreCompleto,
+        Telefono: row.Telefono,
+        Incidentes: row.Incidentes,
+        FechaAsignacion: row.FechaAsignacion,
+        FechaSeguimiento: row.FechaSeguimiento,
+        Descripcion: row.Descripcion,
+        Documentos: row.Documentos,
+      }));
+
+      // Convertir el objeto CSV en una cadena CSV
+      const csvData = Papa.unparse(csv, { header: true });
+
+      // Agregar encabezados para controlar la caché
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename=planificador.csv');
+      res.setHeader('Cache-Control', 'no-store'); // Deshabilitar la caché del navegador
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      res.send(csvData);
+    }
+  });
+});
+
+/* 
+app.get('/exportarCambaceoDiario', (req, res) => {
+  const fecha = req.query.fecha; // Fecha en el formato deseado, ej. '2023-10-01'
+  const idColaborador = req.query.id; // ID del colaborador
+  const sql = `SELECT ID, NombreCompleto, Telefono, FechaAsignacion, FechaConclusion, Descripcion, Documentos,
+               Direccion_Calle, Direccion_Num_Ext, Direccion_Num_Int, Direccion_CP, Direccion_Colonia
+               FROM Planificador
+               WHERE Tipo = 'Cambaceo_Diario'
+               AND FechaAsignacion = ? 
+               AND IDColaborador = ?`;
+  db.query(sql, [fecha, idColaborador], (err, results) => {
+    if (err) {
+      console.error('Error al consultar la base de datos: ' + err.message);
+      return res.status(500).send('Error interno del servidor');
+    }else{
+      console.log(results)
+      const csv=results.map((row)=>({
+        ID:row.ID,
+        NombreCompleto: row.NombreCompleto,
+        Telefono:row.Telefono,
+        FechaAsignacion: row.FechaAsignacion,
+        FechaConclusion: row.FechaConclusion,
+        Descripcion: row.Descripcion,
+        Documentos: row.Documentos,
+        Calle:row.Direccion_Calle,
+        Numero_Exterior:row.Direccion_Num_Ext,
+        Numero_Interior:row.Direccion_Num_Int,
+        Codigo_Postal:row.Direccion_CP,
+        Colonia:row.Direccion_Colonia
+
+      }));
+      const csvData= Papa.unparse(csv, {header: true});
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename=planificador.csv');
+      res.setHeader('Cache-Control', 'no-store'); // Deshabilitar la caché del navegador
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      res.send(csvData);
+    }
+
+  });
+});
+*/
+
+app.get('/exportarCambaceoDiario', (req, res) => {
+  const fecha = req.query.fecha;
+  const idColaborador = req.query.id;
+
+  const sql = `SELECT ID, NombreCompleto, Telefono, FechaAsignacion, FechaConclusion, Descripcion, Documentos,
+               Direccion_Calle, Direccion_Num_Ext, Direccion_Num_Int, Direccion_CP, Direccion_Colonia
+               FROM Planificador
+               WHERE Tipo = 'Cambaceo_Diario'
+               AND FechaAsignacion = ?
+               AND IDColaborador = ?`;
+
+  db.query(sql, [fecha, idColaborador], (err, results) => {
+    if (err) {
+      console.error('Error al consultar la base de datos: ' + err.message);
+      return res.status(500).send('Error interno del servidor');
+    }
+
+    if (results.length === 0) {
+      // Si no hay resultados, envía una respuesta JSON al frontend
+      return res.json({ empty: true });
+    }
+
+    const csv = results.map((row) => ({
+      ID: row.ID,
+      NombreCompleto: row.NombreCompleto,
+      Telefono: row.Telefono,
+      FechaAsignacion: row.FechaAsignacion,
+      FechaConclusion: row.FechaConclusion,
+      Descripcion: row.Descripcion,
+      Documentos: row.Documentos,
+      Calle: row.Direccion_Calle,
+      Numero_Exterior: row.Direccion_Num_Ext,
+      Numero_Interior: row.Direccion_Num_Int,
+      Codigo_Postal: row.Direccion_CP,
+      Colonia: row.Direccion_Colonia,
+    }));
+    const csvData = Papa.unparse(csv, { header: true });
+
+    // Configurar las cabeceras para la descarga del archivo
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=planificador.csv');
+    res.setHeader('Cache-Control', 'no-store'); // Deshabilitar la caché del navegador
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.send(csvData);
+  });
+});
+
+
+
+app.get('/exportarCambaceoSemanal', (req, res) => {
+  const fecha = req.query.fecha;
+  const idColaborador = req.query.id;
+
+  const sql = `SELECT ID, NombreCompleto, Telefono, FechaAsignacion, FechaConclusion, Descripcion, Documentos,
+               Direccion_Calle, Direccion_Num_Ext, Direccion_Num_Int, Direccion_CP, Direccion_Colonia
+               FROM Planificador
+               WHERE Tipo = 'Cambaceo_Semanal'
+               AND FechaAsignacion <= ?
+               AND FechaConclusion <= ?
+               AND IDColaborador = ?`;
+
+  db.query(sql, [fecha, fecha, idColaborador], (err, results) => {
+    if (err) {
+      console.error('Error al consultar la base de datos: ' + err.message);
+      return res.status(500).send('Error interno del servidor');
+    }
+
+    if (results.length === 0) {
+      // Si no hay resultados, envía una respuesta JSON al frontend
+      return res.json({ empty: true });
+    }
+
+    const csv = results.map((row) => ({
+      ID: row.ID,
+      NombreCompleto: row.NombreCompleto,
+      Telefono: row.Telefono,
+      FechaAsignacion: row.FechaAsignacion,
+      FechaConclusion: row.FechaConclusion,
+      Descripcion: row.Descripcion,
+      Documentos: row.Documentos,
+      Calle: row.Direccion_Calle,
+      Numero_Exterior: row.Direccion_Num_Ext,
+      Numero_Interior: row.Direccion_Num_Int,
+      Codigo_Postal: row.Direccion_CP,
+      Colonia: row.Direccion_Colonia,
+    }));
+    const csvData = Papa.unparse(csv, { header: true });
+
+    // Configurar las cabeceras para la descarga del archivo
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=planificador.csv');
+    res.setHeader('Cache-Control', 'no-store'); // Deshabilitar la caché del navegador
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.send(csvData);
+  });
+});
+
