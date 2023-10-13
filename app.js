@@ -206,61 +206,93 @@ app.post("/guardar_datos_visita", (req, res) => {
 
 //Guardar datos visitaProgramada para todos los colab
 app.post("/guardar_datos_visita", (req, res) => {
-  const {
-    NombreCompleto,
-    Telefono,
-    FechaAsignacion,
-    Direccion_Calle,
-    Direccion_Num_Ext,
-    Direccion_Num_Int,
-    Direccion_CP,
-    Direccion_Colonia,
-    Sitioweb,
-    Descripcion,
-    Tipo = "Visita_Programada",
-    FechaConclusion = FechaAsignacion,
-    Documentos = 'src',
-  } = req.body;
-  // Obtener la lista de colaboradores activos
-  const obtenerColaboradoresActivos = "SELECT id AS IDColaborador FROM Colaborador WHERE Activo = 1";
-  db.query(obtenerColaboradoresActivos, (err, colaboradores) => {
+  const { NombreCompleto, Telefono, FechaAsignacion, Direccion_Calle, Direccion_Num_Ext, Direccion_Num_Int, Direccion_CP, Direccion_Colonia, Sitioweb,  Descripcion, Tipo="Visita_Programada", FechaConclusion=FechaAsignacion , Documentos='src', IDColaborador=1,   } = req.body;
+  // Inserta los datos en la base de datos
+  const sql =
+    "INSERT INTO Planificador (NombreCompleto, Telefono, FechaAsignacion, Direccion_Calle, Direccion_Num_Ext, Direccion_Num_Int, Direccion_CP, Direccion_Colonia, Sitioweb, Descripcion, Tipo, FechaConclusion, Documentos, IDColaborador) VALUES (?, ?, STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s.%fZ'), ?,?,?,?,?,?,?,?,STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s.%fZ'),?,?)";
+  const values = [NombreCompleto, Telefono, FechaAsignacion, Direccion_Calle, Direccion_Num_Ext, Direccion_Num_Int, Direccion_CP, Direccion_Colonia, Sitioweb, Descripcion, Tipo, FechaConclusion, Documentos, IDColaborador];
+
+  db.query(sql, values, (err, result) => {
     if (err) {
-      console.error("Error al obtener colaboradores activos: " + err.message);
-      res.status(500).send("Error al obtener la lista de colaboradores activos");
-      return;
+      console.error(
+        "Error al insertar datos en la base de datos: " + err.message
+      );
+      res.status(500).send("Error al guardar los datos en la base de datos");
+    } else {
+      console.log("Datos guardados correctamente");
+      res.status(200).send("Datos guardados correctamente");
     }
-    // Iterar sobre la lista de colaboradores y realizar la inserción de datos
-    colaboradores.forEach((colaborador) => {
-      const sql =
-        "INSERT INTO Planificador (NombreCompleto, Telefono, FechaAsignacion, Direccion_Calle, Direccion_Num_Ext, Direccion_Num_Int, Direccion_CP, Direccion_Colonia, Sitioweb, Descripcion, Tipo, FechaConclusion, Documentos, IDColaborador) VALUES (?, ?, STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s.%fZ'), ?,?,?,?,?,?,?,?,STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s.%fZ'),?,?)";
+  });
+});
+  
+//app.post("/guardar_datos_cambaceoDiario", (req, res) => {  
+//const {
+  //  NombreCompleto,
+  //  Telefono,
+  //  FechaAsignacion,
+  //  Direccion_Calle,
+  //  Direccion_Num_Ext,
+  //  Direccion_Num_Int,
+  //  Direccion_CP,
+  //  Direccion_Colonia,
+  //  Sitioweb,
+  //  Descripcion,
+  //  Tipo = "Cambaceo_Diario",
+  //  FechaConclusion = FechaAsignacion,
+  //  Documentos,
+  //} = req.body;
+  //// Obtener la lista de colaboradores activos
+  //const obtenerColaboradoresActivos = "SELECT id AS IDColaborador FROM Colaborador WHERE Activo = 1";
+  //db.query(obtenerColaboradoresActivos, (err, colaboradores) => {
+  //  if (err) {
+  //    console.error("Error al obtener colaboradores activos: " + err.message);
+  //    res.status(500).send("Error al obtener la lista de colaboradores activos");
+  //    return;
+  //  }
+  //  // Iterar sobre la lista de colaboradores y realizar la inserción de datos
+  //  colaboradores.forEach((colaborador) => {
+  //    const sql =
+  //      "INSERT INTO Planificador (NombreCompleto, Telefono, FechaAsignacion, Direccion_Calle, Direccion_Num_Ext, Direccion_Num_Int, Direccion_CP, Direccion_Colonia, Sitioweb, Descripcion, Tipo, FechaConclusion, Documentos, IDColaborador) VALUES (?, ?, STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s.%fZ'), ?,?,?,?,?,?,?,?,STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s.%fZ'),?,?)";
+//
+  //    const values = [
+  //      NombreCompleto,
+  //      Telefono,
+  //      FechaAsignacion,
+  //      Direccion_Calle,
+  //      Direccion_Num_Ext,
+  //      Direccion_Num_Int,
+  //      Direccion_CP,
+  //      Direccion_Colonia,
+  //      Sitioweb,
+  //      Descripcion,
+  //      Tipo,
+  //      FechaConclusion,
+  //      Documentos,
+  //      colaborador.IDColaborador, // Usar el IDColaborador del colaborador activo actual
+  //    ];
+//
+  //    db.query(sql, values, (err, result) => {
+  //      if (err) {
+  //        console.error("Error al insertar datos en la base de datos: " + err.message);
+  //      } else {
+  //        console.log("Datos guardados correctamente para el colaborador con ID " + colaborador.IDColaborador);
+  //      }
+  //    });
+  //  });
 
-      const values = [
-        NombreCompleto,
-        Telefono,
-        FechaAsignacion,
-        Direccion_Calle,
-        Direccion_Num_Ext,
-        Direccion_Num_Int,
-        Direccion_CP,
-        Direccion_Colonia,
-        Sitioweb,
-        Descripcion,
-        Tipo,
-        FechaConclusion,
-        Documentos,
-        colaborador.IDColaborador, // Usar el IDColaborador del colaborador activo actual
-      ];
+  //  res.status(200).send("Datos guardados correctamente para todos los colaboradores activos");
+  //});
 
-      db.query(sql, values, (err, result) => {
-        if (err) {
-          console.error("Error al insertar datos en la base de datos: " + err.message);
-        } else {
-          console.log("Datos guardados correctamente para el colaborador con ID " + colaborador.IDColaborador);
-        }
-      });
-    });
-
-    res.status(200).send("Datos guardados correctamente para todos los colaboradores activos");
+app.get("/SeguimientoVisita", (req, res) => {
+  const sql =
+    'Select NombreCompleto, Telefono from Planificador Where Tipo="Visita_Programada" and Telefono is not null and Incidentes is null';
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.error("Error al ejecutar la consulta: " + err.message);
+      res.status(500).send("Error interno del servidor");
+    } else {
+      res.json(result);
+    }
   });
 });
 
