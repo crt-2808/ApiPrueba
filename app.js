@@ -405,3 +405,53 @@ app.get('/exportarCambaceoSemanal', (req, res) => {
   });
 });
 
+
+
+//Nuevo seguimiento Visita
+app.get('/getVisitas', (req, res) => {
+  const query = 'SELECT * FROM Planificador WHERE tipo = ?';
+
+  db.query(query, ['Visita_Programada'], (error, results) => {
+    if (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).json({ success: false, message: 'Error fetching data' });
+    } else {
+      res.json(results);
+    }
+  });
+});
+
+app.put('/api/agregarIncidencia/:id', (req, res) => {
+  const { ID } = req.params;
+  const { incidencia } = req.body;
+
+  // Verifica si la incidencia no está vacía
+  if (!incidencia || incidencia.trim() === '') {
+    return res.status(400).json({ error: 'El campo de incidencia no puede estar vacío' });
+  }
+
+  // Lógica para actualizar la incidencia en la base de datos
+  const query = 'UPDATE Planificador SET incidencia = ? WHERE ID = ?';
+  connection.query(query, [incidencia, ID], (error, results) => {
+    if (error) {
+      console.error('Error al agregar incidencia:', error);
+      return res.status(500).json({ error: 'Hubo un error al agregar la incidencia' });
+    }
+
+    return res.status(200).json({ success: true });
+  });
+});
+
+app.get('/getLlamadas', (req, res) => {
+  const query = 'SELECT * FROM Planificador WHERE tipo = ?';
+
+  db.query(query, ['Llamada'], (error, results) => {
+    if (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).json({ success: false, message: 'Error fetching data' });
+    } else {
+      res.json(results);
+    }
+  });
+});
+
