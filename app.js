@@ -6,7 +6,7 @@ const cors = require("cors");
 const fs = require("fs");
 const csv = require("csv-parser");
 const Papa = require('papaparse');
-const moment=require("moment-timezone");
+
 
 app.get("/", (req, res) => {
   //res.send(" Hello world!")
@@ -455,3 +455,115 @@ app.get('/getLlamadas', (req, res) => {
   });
 });
 
+
+const moment = require('moment');
+
+app.get('/exportarCambaceoSemanal', (req, res) => {
+  // Obtener la fecha actual
+  const fechaPeticion = moment();
+
+  // Calcular la fecha del próximo lunes y domingo
+  const fechaAsignacion = fechaPeticion.clone().startOf('isoWeek').add(1, 'weeks');
+  const fechaFin = fechaPeticion.clone().endOf('isoWeek').add(1, 'weeks');
+
+  const fechaAsignacionFormat = fechaAsignacion.format('YYYY-MM-DD');
+  const fechaFinFormat = fechaFin.format('YYYY-MM-DD');
+
+  console.log('Fecha de inicio:', fechaAsignacionFormat);
+  console.log('Fecha de fin:', fechaFinFormat);
+
+  const sql =
+    'SELECT * FROM Planificador WHERE Tipo = ? AND Incidentes IS NOT NULL AND FechaAsignacion >= ? AND FechaConclusion <= ?';
+
+  db.query(sql, ['Cambaceo_Semanal', fechaAsignacionFormat, fechaFinFormat], (err, data) => {
+    if (err) {
+      console.error('Error al obtener datos: ' + err.message);
+      return res.status(500).json({
+        error: 'Error interno del servidor',
+      });
+    }
+
+    const responseData = {
+      fechaAsignacion: fechaAsignacionFormat,
+      fechaFin: fechaFinFormat,
+    };
+
+    if (data.length === 0) {
+      // No hay datos
+      responseData.empty = true;
+      return res.json(responseData);
+    }
+
+    // Crear un objeto CSV con encabezados y datos alineados
+    const csv = data.map((row) => ({
+      ID: row.ID,
+      NombreCompleto: row.NombreCompleto,
+      Telefono: row.Telefono,
+      Incidentes: row.Incidentes,
+      FechaAsignacion: row.FechaAsignacion,
+      FechaSeguimiento: row.FechaSeguimiento,
+      Descripcion: row.Descripcion,
+      Documentos: row.Documentos,
+    }));
+
+    // Convertir el objeto CSV en una cadena CSV
+    const csvData = Papa.unparse(csv, { header: true });
+
+    // Configurar las cabeceras para indicar que se está enviando un archivo descargable
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=planificador.csv');
+
+    // Agregar las fechas al objeto de respuesta
+    responseData.empty = false;
+    responseData.csvData = csvData;
+
+    // Enviar la respuesta
+    res.json(responseData);
+  });
+});
+
+app.get('/imprimirFechas', (req, res) => {
+  // Obtener la fecha actual
+  const fechaPeticion = moment();
+
+  // Calcular la fecha del próximo lunes y domingo
+  const fechaAsignacion = fechaPeticion.clone().startOf('isoWeek').add(1, 'weeks');
+  const fechaFin = fechaPeticion.clone().endOf('isoWeek').add(1, 'weeks');
+
+  console.log('Fecha de inicio:', fechaAsignacion.format('YYYY-MM-DD'));
+  console.log('Fecha de fin:', fechaFin.format('YYYY-MM-DD'));
+
+  // Realizar la consulta SQL
+  const sql =
+    'SELECT * FROM Planificador WHERE Tipo = ? AND FechaAsignacion >= ? AND FechaConclusion <= ?';
+  
+  const params = ['Cambaceo_Semanal', fechaAsignacion.format('YYYY-MM-DD'), fechaFin.format('YYYY-MM-DD')];
+
+  db.query(sql, params, (err, data) => {
+    if (err) {
+      console.error('Error al realizar la consulta SQL: ' + err.message);
+      return res.status(500).send('Error interno del servidor.');
+    }
+
+    console.log('Respuesta de la consulta SQL:', data);
+
+    // Crear un objeto CSV con los encabezados específicos
+    const csvData = Papa.unparse(data.map((row) => ({
+      IDColaborador: row.ID,
+      NombreCompleto: row.NombreCompleto,
+      FechaAsignacion: row.FechaAsignacion,
+      FechaConclusion: row.FechaConclusion,
+      Descripcion: row.Descripcion,
+      Telefono: row.Telefono,
+      Calle: row.Direccion_Calle,
+      Numero_Exterior: row.Direccion_Num_Ext,
+      Numero_Interior: row.Direccion_Num_Int,
+      Codigo_Postal: row.Direccion_CP,
+      Colonia: row.Direccion_Colonia,
+    })), { header: true });
+
+    // Guardar el CSV en un archivo
+   // Enviar el CSV como respuesta al cliente
+   res.attachment('resultado_consulta.csv').send(csvData);
+  });
+});
