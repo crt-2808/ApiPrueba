@@ -457,6 +457,7 @@ app.get('/getLlamadas', (req, res) => {
 
 
 const moment = require('moment');
+const { error } = require("console");
 
 app.get('/exportarCambaceoSemanal', (req, res) => {
   // Obtener la fecha actual
@@ -566,4 +567,41 @@ app.get('/imprimirFechas', (req, res) => {
    // Enviar el CSV como respuesta al cliente
    res.attachment('resultado_consulta.csv').send(csvData);
   });
+});
+
+app.get("/lider_info", async (req, res) => {
+
+  const user_email=req.query.usuario.email.toString();
+  const query='Select L.Nombre, L.Apellido_pat, L.Apellido_mat, L.Correo  from Colaborador C inner join Lider L  on C.IDLider=L.IDBD where C.Correo=?;';
+  db.query(query, [user_email],(error, resuts)=>{
+    if(error){
+      console.log("Error fetching data: ", error);
+      res.status(500).json({success: false, message: "Error fetching data"});
+    }else{
+      res.json(resuts)
+    }
+  })
+
+});
+
+app.get("/Colaborador_Info", async (req, res) => {
+  try {
+    const user_email = req.query.email.toString();
+    const Tipo = req.query.Tipo.toString();
+    
+    const query = "Select * from Colaborador C inner join Planificador P on P.IDColaborador=C.id where C.Correo=? and P.Tipo=?";
+    
+    db.query(query, [user_email, Tipo], (error, results) => {
+      if (error) {
+        console.log("Error fetching data: ", error);
+        res.status(500).json({ success: false, message: "Error fetching data" });
+      } else {
+        res.json(results);
+        console.log(results)
+      }
+    });
+  } catch (error) {
+    console.error("Error en la solicitud Colaborador_Info:", error);
+    res.status(500).json({ success: false, message: "Error interno del servidor" });
+  }
 });
