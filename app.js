@@ -597,7 +597,7 @@ app.get("/Colaborador_Info", async (req, res) => {
         res.status(500).json({ success: false, message: "Error fetching data" });
       } else {
         res.json(results);
-        console.log(results)
+        
       }
     });
   } catch (error) {
