@@ -432,7 +432,7 @@ app.put('/api/agregarIncidencia/:id', (req, res) => {
 
   // Lógica para actualizar la incidencia en la base de datos
   const query = 'UPDATE Planificador SET incidencia = ? WHERE ID = ?';
-  connection.query(query, [incidencia, ID], (error, results) => {
+  db.query(query, [incidencia, ID], (error, results) => {
     if (error) {
       console.error('Error al agregar incidencia:', error);
       return res.status(500).json({ error: 'Hubo un error al agregar la incidencia' });
@@ -569,6 +569,8 @@ app.get('/imprimirFechas', (req, res) => {
   });
 });
 
+
+
 app.get("/lider_info", async (req, res) => {
 
   const user_email=req.query.usuario.email.toString();
@@ -604,4 +606,37 @@ app.get("/Colaborador_Info", async (req, res) => {
     console.error("Error en la solicitud Colaborador_Info:", error);
     res.status(500).json({ success: false, message: "Error interno del servidor" });
   }
+});
+
+app.get("/api/getPlanificador/:id", (req, res) => {
+  const id = req.params.id;
+
+  // Realiza la consulta SQL
+  db.query("SELECT * FROM Planificador WHERE ID = ?", [id], (err, results) => {
+    if (err) {
+      console.error("Error en la consulta SQL:", err);
+      res.status(500).send("Error en el servidor");
+      return;
+    }
+
+    // Envía los resultados como respuesta
+    res.json(results);
+  });
+});
+
+app.put("/api/putPlanificador/:id", (req, res) => {
+  const { id } = req.params;
+  const { Incidentes } = req.body;
+
+  // Actualiza la incidencia en la base de datos
+  const sql = "UPDATE Planificador SET Incidentes = ? WHERE ID = ?";
+  db.query(sql, [Incidentes, id], (err, result) => {
+    if (err) {
+      console.error("Error al actualizar incidencia en la base de datos:", err);
+      res.status(500).json({ error: "Error al actualizar incidencia en la base de datos" });
+    } else {
+      console.log("Incidencia actualizada con éxito en la base de datos");
+      res.status(200).json({ success: true });
+    }
+  });
 });
