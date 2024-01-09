@@ -574,7 +574,7 @@ app.get('/imprimirFechas', (req, res) => {
 app.get("/lider_info", async (req, res) => {
 
   const user_email=req.query.usuario.email.toString();
-  const query='Select L.Nombre, L.Apellido_pat, L.Apellido_mat, L.Correo  from Colaborador C inner join Lider L  on C.IDLider=L.IDBD where C.Correo=?;';
+  const query='Select L.Nombre, L.Apellido_pat, L.Apellido_mat, L.Correo, L.Telefono  from Colaborador C inner join Lider L  on C.IDLider=L.IDBD where C.Correo=?;';
   db.query(query, [user_email],(error, resuts)=>{
     if(error){
       console.log("Error fetching data: ", error);
