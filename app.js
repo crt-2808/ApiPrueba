@@ -572,7 +572,6 @@ app.get('/imprimirFechas', (req, res) => {
 
 
 app.get("/lider_info", async (req, res) => {
-  console.log(req)
   const user_email=req.query.usuario.email.toString();
   const query='Select L.Nombre, L.Apellido_pat, L.Apellido_mat, L.Correo, L.Telefono  from Colaborador C inner join Lider L  on C.IDLider=L.IDBD where C.Correo=?;';
   db.query(query, [user_email],(error, resuts)=>{
@@ -591,7 +590,7 @@ app.get("/Colaborador_Info", async (req, res) => {
     const user_email = req.query.email.toString();
     const Tipo = req.query.Tipo.toString();
     
-    const query = "Select * from Colaborador C inner join Planificador P on P.IDColaborador=C.id where C.Correo=? and P.Tipo=?";
+    const query = "Select * from Usuarios U inner join Planificador P on P.IDUsuarioAsignado=U.idUsuario where U.Correo=? and P.Tipo=?";
     
     db.query(query, [user_email, Tipo], (error, results) => {
       if (error) {
@@ -610,9 +609,10 @@ app.get("/Colaborador_Info", async (req, res) => {
 
 app.get("/api/getPlanificador/:id", (req, res) => {
   const id = req.params.id;
+  console.log("Esta recibes",req.params)
 
   // Realiza la consulta SQL
-  db.query("SELECT * FROM Planificador WHERE ID = ?", [id], (err, results) => {
+  db.query("SELECT * FROM Planificador WHERE idPlanificador = ?", [id], (err, results) => {
     if (err) {
       console.error("Error en la consulta SQL:", err);
       res.status(500).send("Error en el servidor");
@@ -621,6 +621,7 @@ app.get("/api/getPlanificador/:id", (req, res) => {
 
     // Envía los resultados como respuesta
     res.json(results);
+    console.log(results)
   });
 });
 
